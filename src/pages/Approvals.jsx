@@ -59,7 +59,7 @@ function ApprovalCard({ gasto, partida, usuario, onReview }) {
 }
 
 export default function Approvals() {
-  const { profile } = useAuth()
+  const { profile, obraActual } = useAuth()
   const toast = useToast()
 
   const [gastos, setGastos]     = useState([])
@@ -76,8 +76,8 @@ export default function Approvals() {
 
   async function load() {
     const [{ data: g }, { data: p }, { data: u }] = await Promise.all([
-      supabase.from('gastos').select('*').eq('estado', 'pendiente').order('created_at'),
-      supabase.from('partidas').select('*'),
+      supabase.from('gastos').select('*').eq('obra_id', obraActual.id).eq('estado', 'pendiente').order('created_at'),
+      supabase.from('partidas').select('*').eq('obra_id', obraActual.id),
       supabase.from('profiles').select('id, nombre'),
     ])
     setGastos(g ?? [])

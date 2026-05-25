@@ -147,7 +147,7 @@ function PartidaRow({ partida, gastado, items = [], gastos = [] }) {
 }
 
 export default function Dashboard() {
-  const { profile, isRole, canAccess } = useAuth()
+  const { profile, isRole, canAccess, obraActual } = useAuth()
   const [partidas, setPartidas]     = useState([])
   const [gastos, setGastos]         = useState([])
   const [anticipos, setAnticipos]   = useState([])
@@ -158,16 +158,16 @@ export default function Dashboard() {
   useEffect(() => {
     async function load() {
       const [{ data: p }, { data: g }, { data: a }, { data: c }, { data: it }] = await Promise.all([
-        supabase.from('partidas').select('*').eq('activo', true).order('orden'),
-        supabase.from('gastos').select('*'),
-        supabase.from('anticipos').select('*'),
-        supabase.from('profiles').select('id').eq('rol', 'constructor'),
+        supabase.from('partidas').select('*').eq('obra_id', obraActual.id).eq('activo', true).order('orden'),
+        supabase.from('gastos').select('*').eq('obra_id', obraActual.id),
+        supabase.from('anticipos').select('*').eq('obra_id', obraActual.id),
+        supabase.from('obra_usuarios').select('usuario_id').eq('obra_id', obraActual.id).eq('rol', 'constructor'),
         supabase.from('items_partida').select('*').order('partida_id').order('orden'),
       ])
       setPartidas(p ?? [])
       setGastos(g ?? [])
       setAnticipos(a ?? [])
-      setConstructores((c ?? []).map((u) => u.id))
+      setConstructores((c ?? []).map((u) => u.usuario_id))
       setItems(it ?? [])
       setLoading(false)
     }

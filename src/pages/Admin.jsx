@@ -9,10 +9,11 @@ import { useAuth } from '../context/AuthContext'
 import { useToast } from '../components/ui/Toast'
 import { supabase } from '../lib/supabase'
 
-const ROLES = ['constructor', 'colaborador', 'observador', 'director']
+const ROLES = ['constructor', 'colaborador', 'observador', 'admin']
+const ROL_LABELS = { constructor: 'Constructor', colaborador: 'Colaborador', observador: 'Observador', admin: 'Administrador' }
 
 export default function Admin() {
-  const { profile: myProfile } = useAuth()
+  const { profile: myProfile, obraActual } = useAuth()
   const toast = useToast()
 
   const [users, setUsers]       = useState([])
@@ -25,10 +26,11 @@ export default function Admin() {
 
   async function load() {
     const { data } = await supabase
-      .from('profiles')
-      .select('*')
+      .from('obra_usuarios')
+      .select('rol, activo, profiles:usuario_id(*)')
+      .eq('obra_id', obraActual.id)
       .order('created_at', { ascending: false })
-    setUsers(data ?? [])
+    setUsers((data ?? []).map((ou) => ({ ...ou.profiles, rol: ou.rol, activo: ou.activo })))
     setLoading(false)
   }
 
@@ -64,11 +66,20 @@ export default function Admin() {
             'Content-Type': 'application/json',
             Authorization: `Bearer ${session.access_token}`,
           },
-          body: JSON.stringify(form),
+          body: JSON.stringify({ ...form, obra_id: obraActual.id }),
         }
       )
       const json = await res.json()
       if (!res.ok) throw new Error(json.error ?? 'Error al crear usuario')
+
+      if (json.user?.id) {
+        await supabase.from('obra_usuarios').insert({
+          obra_id: obraActual.id,
+          usuario_id: json.user.id,
+          rol: form.rol,
+        })
+      }
+
       toast('Usuario creado exitosamente', 'success')
       setAddModal(false)
       setForm({ nombre: '', email: '', password: '', rol: 'constructor' })
@@ -81,21 +92,13 @@ export default function Admin() {
   }
 
   async function toggleUser(user) {
-    const { data: { session } } = await supabase.auth.getSession()
-    const res = await fetch(
-      `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/toggle-user`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${session.access_token}`,
-        },
-        body: JSON.stringify({ userId: user.id, activo: !user.activo }),
-      }
-    )
-    const json = await res.json()
-    if (!res.ok) { toast(json.error ?? 'Error', 'error'); return }
-    toast(user.activo ? 'Usuario desactivado' : 'Usuario activado', 'info')
+    const { error } = await supabase
+      .from('obra_usuarios')
+      .update({ activo: !user.activo })
+      .eq('obra_id', obraActual.id)
+      .eq('usuario_id', user.id)
+    if (error) { toast(error.message, 'error'); return }
+    toast(user.activo ? 'Usuario desactivado en esta obra' : 'Usuario activado en esta obra', 'info')
     await load()
   }
 
@@ -203,9 +206,7 @@ export default function Admin() {
             error={errors.rol}
           >
             {ROLES.map((r) => (
-              <option key={r} value={r}>
-                {r.charAt(0).toUpperCase() + r.slice(1)}
-              </option>
+              <option key={r} value={r}>{ROL_LABELS[r] ?? r}</option>
             ))}
           </Select>
 

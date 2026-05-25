@@ -29,9 +29,9 @@ function CashCard({ label, value, sub, color }) {
 const ROL_LABEL = { constructor: 'Constructor', colaborador: 'Colaborador' }
 
 export default function CashControl() {
-  const { profile, isRole } = useAuth()
+  const { profile, obraActual, rolEnObra } = useAuth()
   const toast = useToast()
-  const isDirector = isRole('director')
+  const isDirector = rolEnObra === 'admin'
 
   const [anticipos, setAnticipos]   = useState([])
   const [gastos, setGastos]         = useState([])
@@ -50,13 +50,13 @@ export default function CashControl() {
 
   async function load() {
     const [{ data: a }, { data: g }, { data: r }] = await Promise.all([
-      supabase.from('anticipos').select('*').order('fecha', { ascending: false }),
-      supabase.from('gastos').select('monto, usuario_id, estado').eq('estado', 'aprobado'),
-      supabase.from('profiles').select('*').in('rol', ['constructor', 'colaborador']).eq('activo', true),
+      supabase.from('anticipos').select('*').eq('obra_id', obraActual.id).order('fecha', { ascending: false }),
+      supabase.from('gastos').select('monto, usuario_id, estado').eq('obra_id', obraActual.id).eq('estado', 'aprobado'),
+      supabase.from('obra_usuarios').select('rol, profiles:usuario_id(id, nombre, email)').eq('obra_id', obraActual.id).in('rol', ['constructor', 'colaborador']).eq('activo', true),
     ])
     setAnticipos(a ?? [])
     setGastos(g ?? [])
-    setReceptores(r ?? [])
+    setReceptores((r ?? []).map((ou) => ({ ...ou.profiles, rol: ou.rol })).filter((r) => r.id))
     setLoading(false)
   }
 
@@ -71,6 +71,7 @@ export default function CashControl() {
       monto: Number(form.monto),
       descripcion: form.descripcion.trim() || null,
       fecha: form.fecha,
+      obra_id: obraActual.id,
     })
     setSaving(false)
     if (error) { toast(`Error: ${error.message}`, 'error'); return }

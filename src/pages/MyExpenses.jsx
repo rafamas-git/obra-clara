@@ -8,7 +8,7 @@ import { supabase } from '../lib/supabase'
 const FILTER_LABELS = { all: 'Todos', pendiente: 'Pendientes', aprobado: 'Aprobados', rechazado: 'Rechazados' }
 
 export default function MyExpenses() {
-  const { profile } = useAuth()
+  const { profile, obraActual } = useAuth()
   const [gastos, setGastos]     = useState([])
   const [partidas, setPartidas] = useState([])
   const [filter, setFilter]     = useState('all')
@@ -20,9 +20,10 @@ export default function MyExpenses() {
         supabase
           .from('gastos')
           .select('*')
+          .eq('obra_id', obraActual.id)
           .eq('usuario_id', profile.id)
           .order('created_at', { ascending: false }),
-        supabase.from('partidas').select('*'),
+        supabase.from('partidas').select('*').eq('obra_id', obraActual.id),
       ])
       setGastos(g ?? [])
       setPartidas(p ?? [])

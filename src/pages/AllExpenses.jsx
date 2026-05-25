@@ -3,6 +3,7 @@ import Layout from '../components/layout/Layout'
 import ExpenseCard from '../components/expenses/ExpenseCard'
 import LoadingSpinner from '../components/ui/LoadingSpinner'
 import { Select } from '../components/ui/Input'
+import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
 
 const ESTADOS = [
@@ -33,6 +34,7 @@ function CheckPill({ label, active, color, onClick }) {
 }
 
 export default function AllExpenses() {
+  const { obraActual } = useAuth()
   const [gastos, setGastos]       = useState([])
   const [partidas, setPartidas]   = useState([])
   const [usuarios, setUsuarios]   = useState([])
@@ -44,13 +46,13 @@ export default function AllExpenses() {
   useEffect(() => {
     async function load() {
       const [{ data: g }, { data: p }, { data: u }] = await Promise.all([
-        supabase.from('gastos').select('*').order('created_at', { ascending: false }),
-        supabase.from('partidas').select('*').eq('activo', true),
-        supabase.from('profiles').select('id, nombre, rol'),
+        supabase.from('gastos').select('*').eq('obra_id', obraActual.id).order('created_at', { ascending: false }),
+        supabase.from('partidas').select('*').eq('obra_id', obraActual.id).eq('activo', true),
+        supabase.from('obra_usuarios').select('profiles:usuario_id(id, nombre)').eq('obra_id', obraActual.id),
       ])
       setGastos(g ?? [])
       setPartidas(p ?? [])
-      setUsuarios(u ?? [])
+      setUsuarios((u ?? []).map((ou) => ou.profiles).filter(Boolean))
       setLoading(false)
     }
     load()

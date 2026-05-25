@@ -12,7 +12,7 @@ import { useToast } from '../components/ui/Toast'
 const fmtNum = (n) => Number(n ?? 0).toLocaleString('es-CL')
 
 export default function NewExpense() {
-  const { profile } = useAuth()
+  const { profile, obraActual, rolEnObra } = useAuth()
   const navigate = useNavigate()
   const toast = useToast()
 
@@ -33,7 +33,7 @@ export default function NewExpense() {
 
   useEffect(() => {
     Promise.all([
-      supabase.from('partidas').select('*').eq('activo', true).order('orden'),
+      supabase.from('partidas').select('*').eq('obra_id', obraActual.id).eq('activo', true).order('orden'),
       supabase.from('unidades_medida').select('codigo').order('codigo'),
     ]).then(([{ data: p }, { data: u }]) => {
       setPartidas(p ?? [])
@@ -125,6 +125,7 @@ export default function NewExpense() {
         partida_id:      form.partida_id,
         fecha_gasto:     form.fecha_gasto,
         usuario_id:      profile.id,
+        obra_id:         obraActual.id,
         foto_path,
         estado:          'pendiente',
       })
@@ -132,7 +133,7 @@ export default function NewExpense() {
       if (error) throw error
 
       toast('Gasto ingresado correctamente. Quedará pendiente de aprobación.', 'success')
-      navigate(profile.rol === 'director' ? '/gastos' : '/mis-gastos')
+      navigate(rolEnObra === 'admin' ? '/gastos' : '/mis-gastos')
     } catch (err) {
       toast(`Error al guardar: ${err.message}`, 'error')
     } finally {

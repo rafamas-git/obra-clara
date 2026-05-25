@@ -108,7 +108,7 @@ function PartidasPreview({ partidas, onChange }) {
 
 // ── Página principal ─────────────────────────────────────────
 export default function Settings() {
-  const { permisos, updatePermisos } = useAuth()
+  const { permisos, updatePermisos, obraActual } = useAuth()
   const toast = useToast()
 
   // ── Partidas ─────────────────────────────────────────────
@@ -135,7 +135,7 @@ export default function Settings() {
   const [resetting, setResetting] = useState(false)
 
   async function loadPartidas() {
-    const { data } = await supabase.from('partidas').select('*').eq('activo', true).order('orden')
+    const { data } = await supabase.from('partidas').select('*').eq('obra_id', obraActual.id).eq('activo', true).order('orden')
     setPartidas(data ?? [])
     setLoadingP(false)
   }
@@ -180,13 +180,13 @@ export default function Settings() {
     setImportSaving(true)
     try {
       if (importMode === 'reemplazar') {
-        const { error: delErr } = await supabase.from('partidas').delete().not('id', 'is', null)
+        const { error: delErr } = await supabase.from('partidas').delete().eq('obra_id', obraActual.id)
         if (delErr) throw delErr
       }
       const baseOrden = importMode === 'agregar' ? partidas.length : 0
       const { data: insertadas, error: insErr } = await supabase
         .from('partidas')
-        .insert(validas.map((p, i) => ({ nombre: p.nombre.trim(), presupuesto_estimado: Number(p.presupuesto_estimado) || 0, orden: baseOrden + i })))
+        .insert(validas.map((p, i) => ({ nombre: p.nombre.trim(), presupuesto_estimado: Number(p.presupuesto_estimado) || 0, orden: baseOrden + i, obra_id: obraActual.id })))
         .select('id')
       if (insErr) throw insErr
       const todosItems = (insertadas ?? []).flatMap((ins, i) =>
@@ -231,6 +231,7 @@ export default function Settings() {
       nombre: newPartida.nombre.trim(),
       presupuesto_estimado: Number(newPartida.presupuesto_estimado) || 0,
       orden: partidas.length,
+      obra_id: obraActual.id,
     })
     setSaving(false)
     if (error) { toast('Error al crear', 'error'); return }
@@ -259,12 +260,12 @@ export default function Settings() {
   async function doReset() {
     setResetting(true)
     try {
-      const { error: e1 } = await supabase.from('gastos').delete().not('id', 'is', null)
+      const { error: e1 } = await supabase.from('gastos').delete().eq('obra_id', obraActual.id)
       if (e1) throw e1
-      const { error: e2 } = await supabase.from('anticipos').delete().not('id', 'is', null)
+      const { error: e2 } = await supabase.from('anticipos').delete().eq('obra_id', obraActual.id)
       if (e2) throw e2
       if (resetType === 'proyecto') {
-        const { error: e3 } = await supabase.from('partidas').delete().not('id', 'is', null)
+        const { error: e3 } = await supabase.from('partidas').delete().eq('obra_id', obraActual.id)
         if (e3) throw e3
       }
       toast(resetType === 'consumos' ? 'Consumos reseteados.' : 'Proyecto reiniciado completamente.', 'success')
