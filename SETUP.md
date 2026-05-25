@@ -76,13 +76,21 @@ Abre [http://localhost:3000](http://localhost:3000)
 
 ## 6. Deploy en Vercel
 
+**Producción:** https://obra-clara-mu.vercel.app
+
+**Repositorio GitHub:** https://github.com/rafamas-git/obra-clara
+
+**Cuenta Vercel:** rafamas-4291 (conectada a GitHub portalsync)
+
+### Publicar cambios
+
 ```bash
-npm run build
+npm run deploy
 ```
 
-En [vercel.com](https://vercel.com) → **Add New Project** → importa el repositorio de Git.
+Hace `git push` a GitHub y dispara el redeploy en Vercel vía Deploy Hook.
 
-Vercel detecta Vite automáticamente. Agrega las variables de entorno en **Settings → Environment Variables**:
+### Variables de entorno (ya configuradas en Vercel)
 - `VITE_SUPABASE_URL`
 - `VITE_SUPABASE_ANON_KEY`
 
