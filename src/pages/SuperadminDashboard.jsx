@@ -61,7 +61,7 @@ export default function SuperadminDashboard() {
   // ── Modals ───────────────────────────────────────────────
   const [obraModal, setObraModal]   = useState(false)
   const [userModal, setUserModal]   = useState(false)
-  const [preObraId, setPreObraId]   = useState('')   // obra pre-seleccionada al crear usuario
+  const [preObraId, setPreObraId]   = useState('')
 
   const [formObra, setFormObra]     = useState({ nombre: '', descripcion: '' })
   const [savingObra, setSavingObra] = useState(false)
@@ -69,6 +69,13 @@ export default function SuperadminDashboard() {
   const [formUser, setFormUser]     = useState({ nombre: '', email: '', password: '', rol: 'admin', obra_id: '' })
   const [userErrors, setUserErrors] = useState({})
   const [savingUser, setSavingUser] = useState(false)
+
+  // ── Asignar usuario existente ─────────────────────────────
+  const [assignModal, setAssignModal]   = useState(false)
+  const [assignObraId, setAssignObraId] = useState('')
+  const [allProfiles, setAllProfiles]   = useState([])
+  const [formAssign, setFormAssign]     = useState({ usuario_id: '', rol: 'admin' })
+  const [savingAssign, setSavingAssign] = useState(false)
 
   // ── Load ─────────────────────────────────────────────────
   async function load() {
@@ -166,6 +173,36 @@ export default function SuperadminDashboard() {
     } finally {
       setSavingUser(false)
     }
+  }
+
+  // ── Asignar usuario existente ─────────────────────────────
+  async function openAssignModal(obraId) {
+    const { data } = await supabase
+      .from('profiles')
+      .select('id, nombre, email, rol')
+      .neq('rol', 'superadmin')
+      .order('nombre')
+    const yaEnObra = new Set(ouData.filter(ou => ou.obra_id === obraId).map(ou => ou.profiles?.id).filter(Boolean))
+    setAllProfiles((data ?? []).filter(p => !yaEnObra.has(p.id)))
+    setAssignObraId(obraId)
+    setFormAssign({ usuario_id: '', rol: 'admin' })
+    setAssignModal(true)
+  }
+
+  async function assignUser() {
+    if (!formAssign.usuario_id) { toast('Selecciona un usuario', 'error'); return }
+    setSavingAssign(true)
+    const { error } = await supabase.from('obra_usuarios').insert({
+      obra_id:    assignObraId,
+      usuario_id: formAssign.usuario_id,
+      rol:        formAssign.rol,
+      activo:     true,
+    })
+    setSavingAssign(false)
+    if (error) { toast(error.message, 'error'); return }
+    toast('Usuario asignado a la obra', 'success')
+    setAssignModal(false)
+    await load()
   }
 
   // ── Toggle obra activo ────────────────────────────────────
@@ -293,11 +330,18 @@ export default function SuperadminDashboard() {
                         {/* Actions */}
                         <div className="flex items-center gap-2 flex-shrink-0">
                           <button
+                            onClick={() => openAssignModal(obra.id)}
+                            className="text-xs px-2.5 py-1.5 rounded-lg border border-green-200 text-green-700 hover:bg-green-50 font-medium transition-colors"
+                            title="Asignar usuario existente a esta obra"
+                          >
+                            Asignar
+                          </button>
+                          <button
                             onClick={() => openUserModal(obra.id)}
                             className="text-xs px-2.5 py-1.5 rounded-lg border border-primary-200 text-primary-600 hover:bg-primary-50 font-medium transition-colors"
-                            title="Agregar usuario a esta obra"
+                            title="Crear nuevo usuario para esta obra"
                           >
-                            + Usuario
+                            + Nuevo
                           </button>
                           <button
                             onClick={() => setExpandedId(isExpanded ? null : obra.id)}
@@ -386,6 +430,40 @@ export default function SuperadminDashboard() {
             <Button variant="secondary" className="flex-1" onClick={() => setObraModal(false)}>Cancelar</Button>
             <Button className="flex-1" loading={savingObra} disabled={!formObra.nombre.trim()} onClick={createObra}>
               Crear obra
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* ── Modal asignar usuario existente ── */}
+      <Modal open={assignModal} onClose={() => setAssignModal(false)} title="Asignar usuario a obra">
+        <div className="space-y-4">
+          <Select
+            label="Usuario"
+            value={formAssign.usuario_id}
+            onChange={(e) => setFormAssign((f) => ({ ...f, usuario_id: e.target.value }))}
+          >
+            <option value="">— Selecciona un usuario —</option>
+            {allProfiles.map((p) => (
+              <option key={p.id} value={p.id}>{p.nombre} ({p.email})</option>
+            ))}
+          </Select>
+          <Select
+            label="Rol en la obra"
+            value={formAssign.rol}
+            onChange={(e) => setFormAssign((f) => ({ ...f, rol: e.target.value }))}
+          >
+            {Object.entries(ROL_LABELS).map(([val, label]) => (
+              <option key={val} value={val}>{label}</option>
+            ))}
+          </Select>
+          {allProfiles.length === 0 && (
+            <p className="text-sm text-gray-500 text-center py-2">Todos los usuarios ya están en esta obra.</p>
+          )}
+          <div className="flex gap-3 pt-1">
+            <Button variant="secondary" className="flex-1" onClick={() => setAssignModal(false)}>Cancelar</Button>
+            <Button className="flex-1" loading={savingAssign} disabled={!formAssign.usuario_id} onClick={assignUser}>
+              Asignar
             </Button>
           </div>
         </div>
