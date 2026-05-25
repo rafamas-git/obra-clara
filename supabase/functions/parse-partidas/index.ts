@@ -30,7 +30,16 @@ Deno.serve(async (req) => {
 
     const { data: profile } = await supabaseAdmin
       .from('profiles').select('rol').eq('id', user.id).single()
-    if (profile?.rol !== 'director') throw new Error('Solo el Director puede usar esta función')
+
+    // Acepta: superadmin, director (rol legacy) o admin en cualquier obra
+    const rolGlobal = profile?.rol
+    let autorizado = rolGlobal === 'superadmin' || rolGlobal === 'director'
+    if (!autorizado) {
+      const { data: membership } = await supabaseAdmin
+        .from('obra_usuarios').select('rol').eq('usuario_id', user.id).eq('rol', 'admin').eq('activo', true).limit(1)
+      autorizado = (membership?.length ?? 0) > 0
+    }
+    if (!autorizado) throw new Error('Solo administradores pueden usar esta función')
 
     const apiKey = Deno.env.get('ANTHROPIC_API_KEY')
     if (!apiKey) throw new Error('ANTHROPIC_API_KEY no configurada. Ve a Supabase → Settings → Edge Functions → Secrets y agrega ANTHROPIC_API_KEY')
@@ -66,6 +75,7 @@ Deno.serve(async (req) => {
     const message = await anthropic.messages.create({
       model: 'claude-sonnet-4-6',
       max_tokens: 8192,
+      temperature: 0,
       messages: [{
         role: 'user',
         content: `Eres un experto en construcción chilena. Analiza esta planilla de cubicación y extrae las PARTIDAS con sus presupuestos.
