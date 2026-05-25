@@ -74,17 +74,19 @@ Abre [http://localhost:3000](http://localhost:3000)
 
 ---
 
-## 6. Deploy en Netlify
+## 6. Deploy en Vercel
 
 ```bash
 npm run build
 ```
 
-En Netlify → **New site from Git** o arrastra la carpeta `dist/`.
+En [vercel.com](https://vercel.com) → **Add New Project** → importa el repositorio de Git.
 
-Agrega las variables de entorno en Netlify:
+Vercel detecta Vite automáticamente. Agrega las variables de entorno en **Settings → Environment Variables**:
 - `VITE_SUPABASE_URL`
 - `VITE_SUPABASE_ANON_KEY`
+
+> El archivo `vercel.json` no es necesario para Vite; Vercel infiere la configuración de build (`npm run build`) y el directorio de salida (`dist/`) automáticamente.
 
 ---
 

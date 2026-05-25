@@ -134,7 +134,7 @@ ObraClara es una PWA (Progressive Web App) para el control de gastos en obras de
 
 ## Pendientes
 
-- [ ] **Definir plataforma de deploy** (Vercel / Netlify) y configurar variables de entorno de producción.
+- [ ] **Deploy en Vercel**: conectar repositorio en vercel.com y configurar variables de entorno `VITE_SUPABASE_URL` y `VITE_SUPABASE_ANON_KEY`.
 - [ ] **Confirmar nombre de la obra** en `configuracion.nombre_obra` — actualmente no se usa en la UI (está disponible en AuthContext como `nombreObra`).
 - [ ] **Anulado en `mis-gastos`**: el filtro de estado en `/mis-gastos` puede no incluir aún la opción "Anulado" si fue copiado antes de agregar esa variante.
 - [ ] **Reportes / exportación**: no existe aún exportación a Excel ni PDF de gastos o resumen de caja.
