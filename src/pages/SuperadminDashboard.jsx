@@ -158,14 +158,6 @@ export default function SuperadminDashboard() {
       const json = await res.json()
       if (!res.ok) throw new Error(json.error ?? 'Error al crear usuario')
 
-      if (json.user?.id) {
-        await supabase.from('obra_usuarios').insert({
-          obra_id:    formUser.obra_id,
-          usuario_id: json.user.id,
-          rol:        formUser.rol,
-        })
-      }
-
       toast('Usuario creado y asignado a la obra', 'success')
       setUserModal(false)
       await load()

@@ -34,19 +34,46 @@ Deno.serve(async (req) => {
       .eq('id', caller.id)
       .single()
 
-    if (callerProfile?.rol !== 'director') {
-      throw new Error('Solo el Director puede gestionar usuarios')
-    }
+    const isSuperadmin = callerProfile?.rol === 'superadmin'
 
-    const { userId, activo } = await req.json()
+    const { userId, activo, obra_id } = await req.json()
     if (!userId) throw new Error('userId requerido')
 
-    const { error } = await supabaseAdmin
+    // Autorización
+    if (!isSuperadmin) {
+      if (!obra_id) throw new Error('obra_id requerido para administradores de obra')
+
+      const { data: membership } = await supabaseAdmin
+        .from('obra_usuarios')
+        .select('rol')
+        .eq('obra_id', obra_id)
+        .eq('usuario_id', caller.id)
+        .eq('activo', true)
+        .single()
+
+      if (membership?.rol !== 'admin') {
+        throw new Error('Solo el administrador de la obra puede gestionar usuarios')
+      }
+    }
+
+    // Actualizar obra_usuarios.activo si se proporcionó obra_id
+    if (obra_id) {
+      const { error: ouError } = await supabaseAdmin
+        .from('obra_usuarios')
+        .update({ activo })
+        .eq('obra_id', obra_id)
+        .eq('usuario_id', userId)
+
+      if (ouError) throw ouError
+    }
+
+    // Actualizar profiles.activo (estado global del usuario en la plataforma)
+    const { error: profileError } = await supabaseAdmin
       .from('profiles')
       .update({ activo })
       .eq('id', userId)
 
-    if (error) throw error
+    if (profileError) throw profileError
 
     return new Response(
       JSON.stringify({ success: true }),

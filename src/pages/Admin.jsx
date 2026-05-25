@@ -72,14 +72,6 @@ export default function Admin() {
       const json = await res.json()
       if (!res.ok) throw new Error(json.error ?? 'Error al crear usuario')
 
-      if (json.user?.id) {
-        await supabase.from('obra_usuarios').insert({
-          obra_id: obraActual.id,
-          usuario_id: json.user.id,
-          rol: form.rol,
-        })
-      }
-
       toast('Usuario creado exitosamente', 'success')
       setAddModal(false)
       setForm({ nombre: '', email: '', password: '', rol: 'constructor' })
