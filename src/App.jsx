@@ -76,7 +76,7 @@ function AppRoutes() {
 
 
       <Route path="/caja" element={
-        <ProtectedRoute roles={['director', 'constructor']}>
+        <ProtectedRoute roles={['director', 'constructor', 'colaborador']}>
           <CashControl />
         </ProtectedRoute>
       } />

@@ -16,7 +16,7 @@ export default function ExpenseDetail() {
   const { id } = useParams()
   const navigate = useNavigate()
   const { profile, isRole } = useAuth()
-  const { showToast } = useToast()
+  const toast = useToast()
 
   const [gasto, setGasto]         = useState(null)
   const [partida, setPartida]     = useState(null)
@@ -82,21 +82,20 @@ export default function ExpenseDetail() {
         descripcion: form.descripcion.trim(),
         monto: Number(form.monto),
         partida_id: form.partida_id || null,
-        fecha_gasto: form.fecha_gasto,
+        fecha_gasto: form.fecha_gasto || null,
       })
       .eq('id', id)
+    setSaving(false)
 
     if (error) {
-      showToast('Error al guardar cambios', 'error')
-    } else {
-      const updated = { ...gasto, descripcion: form.descripcion.trim(), monto: Number(form.monto), partida_id: form.partida_id || null, fecha_gasto: form.fecha_gasto }
-      setGasto(updated)
-      const p = partidas.find((x) => x.id === form.partida_id) ?? null
-      setPartida(p)
-      setEditing(false)
-      showToast('Gasto actualizado', 'success')
+      toast(`Error: ${error.message}`, 'error')
+      return
     }
-    setSaving(false)
+    const updated = { ...gasto, descripcion: form.descripcion.trim(), monto: Number(form.monto), partida_id: form.partida_id || null, fecha_gasto: form.fecha_gasto || null }
+    setGasto(updated)
+    setPartida(partidas.find((x) => x.id === form.partida_id) ?? null)
+    setEditing(false)
+    toast('Gasto actualizado', 'success')
   }
 
   async function confirmVoid() {
@@ -105,15 +104,15 @@ export default function ExpenseDetail() {
       .from('gastos')
       .update({ estado: 'anulado' })
       .eq('id', id)
+    setSaving(false)
 
     if (error) {
-      showToast('Error al anular gasto', 'error')
-    } else {
-      setGasto({ ...gasto, estado: 'anulado' })
-      setVoidOpen(false)
-      showToast('Gasto anulado', 'success')
+      toast(`Error: ${error.message}`, 'error')
+      return
     }
-    setSaving(false)
+    setGasto({ ...gasto, estado: 'anulado' })
+    setVoidOpen(false)
+    toast('Gasto anulado', 'success')
   }
 
   if (loading) return <Layout><LoadingSpinner /></Layout>

@@ -83,7 +83,7 @@ export default function Sidebar() {
         )}
 
 
-        {(rol === 'director' || rol === 'constructor') && (
+        {(rol === 'director' || rol === 'constructor' || rol === 'colaborador') && (
           <NavItem to="/caja" icon={ICONS.cash} label="Control de Caja" />
         )}
 

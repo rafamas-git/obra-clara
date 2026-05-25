@@ -63,7 +63,7 @@ export default function MobileNav() {
           <Tab to="/aprobaciones" label="Aprobar" icon={ICONS.check} />
         )}
 
-        {(rol === 'director' || rol === 'constructor') && (
+        {(rol === 'director' || rol === 'constructor' || rol === 'colaborador') && (
           <Tab to="/caja" label="Caja" icon={ICONS.cash} />
         )}
 
