@@ -9,7 +9,6 @@ import NewExpense from './pages/NewExpense'
 import MyExpenses from './pages/MyExpenses'
 import AllExpenses from './pages/AllExpenses'
 import Approvals from './pages/Approvals'
-import Budget from './pages/Budget'
 import CashControl from './pages/CashControl'
 import Admin from './pages/Admin'
 import ExpenseDetail from './pages/ExpenseDetail'
@@ -75,11 +74,6 @@ function AppRoutes() {
         </ProtectedRoute>
       } />
 
-      <Route path="/presupuesto" element={
-        <ProtectedRoute roles={['director', 'colaborador', 'observador']}>
-          <Budget />
-        </ProtectedRoute>
-      } />
 
       <Route path="/caja" element={
         <ProtectedRoute roles={['director', 'constructor']}>

@@ -341,8 +341,8 @@ function DashboardContent({ partidas, items = [], gastosAprobados, totalPresup, 
         {partidas.length === 0 ? (
           <div className="p-8 text-center">
             <p className="text-gray-400 text-sm">Sin partidas cargadas.</p>
-            <Link to="/presupuesto" className="text-primary-600 text-sm font-medium hover:underline mt-1 inline-block">
-              Cargar presupuesto →
+            <Link to="/configuracion" className="text-primary-600 text-sm font-medium hover:underline mt-1 inline-block">
+              Cargar partidas en Configuración →
             </Link>
           </div>
         ) : (

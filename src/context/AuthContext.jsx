@@ -4,22 +4,16 @@ import { supabase } from '../lib/supabase'
 const AuthContext = createContext(null)
 
 const DEFAULT_PERMISOS = {
-  dashboard:   { constructor: true,  colaborador: true,  observador: true  },
-  presupuesto: { constructor: false, colaborador: true,  observador: true  },
+  dashboard: { constructor: true, colaborador: true, observador: true },
 }
 
 function parsePermisos(cfg) {
   if (!cfg) return DEFAULT_PERMISOS
   return {
     dashboard: {
-      constructor: cfg.dash_constructor  ?? true,
-      colaborador: cfg.dash_colaborador  ?? true,
-      observador:  cfg.dash_observador   ?? true,
-    },
-    presupuesto: {
-      constructor: cfg.presup_constructor ?? false,
-      colaborador: cfg.presup_colaborador ?? true,
-      observador:  cfg.presup_observador  ?? true,
+      constructor: cfg.dash_constructor ?? true,
+      colaborador: cfg.dash_colaborador ?? true,
+      observador:  cfg.dash_observador  ?? true,
     },
   }
 }

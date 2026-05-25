@@ -7,7 +7,7 @@ const ROUTE_NAMES = {
   '/mis-gastos':   'Mis Gastos',
   '/gastos':       'Todos los Gastos',
   '/aprobaciones': 'Aprobaciones',
-  '/presupuesto':  'Presupuesto',
+
   '/caja':         'Control de Caja',
   '/admin':          'Usuarios',
   '/perfil':         'Mi Perfil',
@@ -82,9 +82,6 @@ export default function Sidebar() {
           <NavItem to="/aprobaciones" icon={ICONS.check} label="Aprobaciones" />
         )}
 
-        {(rol === 'director' || rol === 'colaborador' || rol === 'observador') && (
-          <NavItem to="/presupuesto" icon={ICONS.chart} label="Presupuesto" />
-        )}
 
         {(rol === 'director' || rol === 'constructor') && (
           <NavItem to="/caja" icon={ICONS.cash} label="Control de Caja" />
