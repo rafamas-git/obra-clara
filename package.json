@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "deploy": "git push origin main && curl -s -X POST https://api.vercel.com/v1/integrations/deploy/prj_0Z0tA0xLrUk6w9wNpdtRlKahyChy/1JzSC6MVXo"
+    "deploy": "git push origin main && npx vercel --prod --yes"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.39.3",
