@@ -1,4 +1,3 @@
 {
-  "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }],
-  "toolbar": { "enabled": false }
+  "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
 }
