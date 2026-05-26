@@ -19,26 +19,27 @@ En Supabase → **SQL Editor**, copia y ejecuta el contenido de `supabase/schema
 
 ---
 
-## 3. Crear el primer usuario Director
+## 3. Crear el Superadmin
 
 ### Paso A: Crear en Supabase Auth
 En Supabase → **Authentication → Users → Add user**:
-- Email: `director@tuempresa.com`
+- Email: `admin@tuempresa.com`
 - Password: una contraseña segura
-- **No marcar** "Send invite email" si no quieres email
+- **No marcar** "Send invite email"
 
 ### Paso B: Crear perfil en la DB
 En **SQL Editor**, reemplaza el UUID y ejecuta:
 
 ```sql
-INSERT INTO public.profiles (id, email, nombre, rol)
-VALUES (
-  'UUID-COPIADO-DE-AUTH-USERS',
-  'director@tuempresa.com',
-  'Nombre del Director',
-  'director'
-);
+INSERT INTO public.profiles (id, email, nombre, rol, activo)
+SELECT id, email, 'Superadmin', 'superadmin', true
+FROM auth.users
+WHERE email = 'admin@tuempresa.com';
 ```
+
+### Paso C: Crear obras y admins
+Inicia sesión con la cuenta superadmin → el sistema redirige a `/superadmin`.
+Desde ahí se crean las obras y se asignan administradores (usuarios nuevos o existentes) a cada una.
 
 ---
 
@@ -57,6 +58,7 @@ supabase link --project-ref TU_PROJECT_REF
 # Desplegar funciones
 supabase functions deploy create-user
 supabase functions deploy toggle-user
+supabase functions deploy parse-partidas
 ```
 
 Las funciones usan `SUPABASE_SERVICE_ROLE_KEY` automáticamente en el entorno de Supabase.
@@ -76,11 +78,11 @@ Abre [http://localhost:3000](http://localhost:3000)
 
 ## 6. Deploy en Vercel
 
-**Producción:** https://obra-clara-mu.vercel.app
+**Producción:** https://obracl.vercel.app
 
 **Repositorio GitHub:** https://github.com/rafamas-git/obra-clara
 
-**Cuenta Vercel:** rafamas-4291 (conectada a GitHub portalsync)
+**Cuenta Vercel:** rafamas-4291
 
 ### Publicar cambios
 
@@ -88,13 +90,15 @@ Abre [http://localhost:3000](http://localhost:3000)
 npm run deploy
 ```
 
-Hace `git push` a GitHub y dispara el redeploy en Vercel vía Deploy Hook.
+Hace `git push` a GitHub y luego despliega directamente con el CLI de Vercel (`npx vercel --prod --yes`).
+
+> La primera vez en un equipo nuevo hay que autenticarse antes: `npx vercel login`
 
 ### Variables de entorno (ya configuradas en Vercel)
 - `VITE_SUPABASE_URL`
 - `VITE_SUPABASE_ANON_KEY`
 
-> El archivo `vercel.json` no es necesario para Vite; Vercel infiere la configuración de build (`npm run build`) y el directorio de salida (`dist/`) automáticamente.
+> `vercel.json` está en el repo con rewrites SPA (`/(.*) → /index.html`), necesario para que las rutas como `/superadmin` funcionen al recargar.
 
 ---
 
@@ -119,9 +123,10 @@ El archivo `.xlsx` debe tener al menos estas columnas en la **primera hoja**:
 
 ## Roles y permisos
 
-| Rol         | Ingresar gastos | Aprobar | Dashboard | Caja | Admin |
-|-------------|:-:|:-:|:-:|:-:|:-:|
-| Director    | ✗ | ✓ | ✓ | ✓ | ✓ |
-| Constructor | ✓ | ✗ | Solo propio | Solo propio | ✗ |
-| Colaborador | ✓ | ✗ | ✓ | ✗ | ✗ |
-| Observador  | ✗ | ✗ | ✓ | ✗ | ✗ |
+| Rol | Scope | Descripción |
+|-----|-------|-------------|
+| Superadmin | Global (`profiles.rol`) | Gestiona la plataforma desde `/superadmin`: crea obras, asigna admins |
+| Admin | Por obra (`obra_usuarios.rol`) | Gestiona su obra: partidas, aprueba gastos, administra usuarios de la obra |
+| Constructor | Por obra | Registra gastos, ve su propia caja |
+| Colaborador | Por obra | Registra gastos, ve todos los gastos y caja de la obra |
+| Observador | Por obra | Solo lectura del dashboard |
