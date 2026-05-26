@@ -7,6 +7,7 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
+    "deploy:dev": "git push origin dev",
     "deploy": "git push origin main && npx vercel --prod --yes"
   },
   "dependencies": {
